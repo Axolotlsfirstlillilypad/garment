@@ -1,0 +1,43 @@
+import whisper_jax
+import whisper_streaming
+import jax
+from jax import numpy as jnp
+import numpy as np
+from whisper_streaming import WhisperStreaming
+
+# Initialize the Whisper JAX model
+model = whisper_jax.load_model('base', device='gpu')  # Change to 'tpu' if using TPU
+
+# Define a function to run inference using Whisper JAX
+def transcribe_audio(audio):
+    # Process the audio input (convert to the required format)
+    audio_input = jnp.array(audio)
+    
+    # Run the transcription using Whisper JAX
+    result = model.transcribe(audio_input)
+    return result
+
+# Integrate Whisper JAX with Whisper Streaming
+class WhisperJaxStreaming(WhisperStreaming):
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
+
+    def transcribe(self, audio):
+        # Use the custom transcribe function
+        return transcribe_audio(audio)
+
+# Initialize the streaming object
+streaming = WhisperJaxStreaming(model)
+
+# Define a function to handle audio streaming
+def handle_audio_streaming(audio_stream):
+    for audio_chunk in audio_stream:
+        result = streaming.transcribe(audio_chunk)
+        print("Transcription: ", result)
+
+# Simulate an audio stream (replace this with actual audio stream)
+audio_stream = [np.random.randn(16000) for _ in range(10)]  # Simulated audio chunks
+
+# Run the audio streaming handler
+handle_audio_streaming(audio_stream)
